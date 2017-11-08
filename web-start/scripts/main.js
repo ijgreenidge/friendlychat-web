@@ -56,6 +56,11 @@ function FriendlyChat() {
 // Sets up shortcuts to Firebase features and initiate firebase auth.
 FriendlyChat.prototype.initFirebase = function() {
   // TODO(DEVELOPER): Initialize Firebase.
+  this.auth = firebase.auth();
+  this.database = firebase.database();
+  this.storage = firebase.storage();
+  // Initiates Firebase auth and listen to auth state changes.
+  this.auth.onAuthStateChanged(this.onAuthStateChanged.bind(this));
 };
 
 // Loads chat messages history and listens for upcoming ones.
@@ -110,20 +115,24 @@ FriendlyChat.prototype.saveImageMessage = function(event) {
 // Signs-in Friendly Chat.
 FriendlyChat.prototype.signIn = function() {
   // TODO(DEVELOPER): Sign in Firebase with credential from the Google user.
+  // Sign in Firebase using popup auth and Google as the identity provider.
+  var provider = new firebase.auth.GoogleAuthProvider();
+  this.auth.signInWithPopup(provider);
 };
 
 // Signs-out of Friendly Chat.
 FriendlyChat.prototype.signOut = function() {
   // TODO(DEVELOPER): Sign out of Firebase.
+  this.auth.signOut();
+
 };
 
 // Triggers when the auth state change for instance when the user signs-in or signs-out.
 FriendlyChat.prototype.onAuthStateChanged = function(user) {
   if (user) { // User is signed in!
     // Get profile pic and user's name from the Firebase user object.
-    var profilePicUrl = null;   // TODO(DEVELOPER): Get profile pic.
-    var userName = null;        // TODO(DEVELOPER): Get user's name.
-
+    var profilePicUrl = user.photoURL; // Only change these two lines!
+    var userName = user.displayName; // Only change these two lines!
     // Set the user's profile pic and name.
     this.userPic.style.backgroundImage = 'url(' + profilePicUrl + ')';
     this.userName.textContent = userName;
@@ -141,7 +150,8 @@ FriendlyChat.prototype.onAuthStateChanged = function(user) {
 
     // We save the Firebase Messaging Device token and enable notifications.
     this.saveMessagingDeviceToken();
-  } else { // User is signed out!
+  }
+  else { // User is signed out!
     // Hide user's profile and sign-out button.
     this.userName.setAttribute('hidden', 'true');
     this.userPic.setAttribute('hidden', 'true');
@@ -183,11 +193,11 @@ FriendlyChat.resetMaterialTextfield = function(element) {
 
 // Template for messages.
 FriendlyChat.MESSAGE_TEMPLATE =
-    '<div class="message-container">' +
-      '<div class="spacing"><div class="pic"></div></div>' +
-      '<div class="message"></div>' +
-      '<div class="name"></div>' +
-    '</div>';
+  '<div class="message-container">' +
+  '<div class="spacing"><div class="pic"></div></div>' +
+  '<div class="message"></div>' +
+  '<div class="name"></div>' +
+  '</div>';
 
 // A loading image URL.
 FriendlyChat.LOADING_IMAGE_URL = 'https://www.google.com/images/spin-32.gif';
@@ -212,7 +222,8 @@ FriendlyChat.prototype.displayMessage = function(key, name, text, picUrl, imageU
     messageElement.textContent = text;
     // Replace all line breaks by <br>.
     messageElement.innerHTML = messageElement.innerHTML.replace(/\n/g, '<br>');
-  } else if (imageUri) { // If the message is an image.
+  }
+  else if (imageUri) { // If the message is an image.
     var image = document.createElement('img');
     image.addEventListener('load', function() {
       this.messageList.scrollTop = this.messageList.scrollHeight;
@@ -222,7 +233,7 @@ FriendlyChat.prototype.displayMessage = function(key, name, text, picUrl, imageU
     messageElement.appendChild(image);
   }
   // Show the card fading-in.
-  setTimeout(function() {div.classList.add('visible')}, 1);
+  setTimeout(function() { div.classList.add('visible') }, 1);
   this.messageList.scrollTop = this.messageList.scrollHeight;
   this.messageInput.focus();
 };
@@ -232,7 +243,8 @@ FriendlyChat.prototype.displayMessage = function(key, name, text, picUrl, imageU
 FriendlyChat.prototype.toggleButton = function() {
   if (this.messageInput.value) {
     this.submitButton.removeAttribute('disabled');
-  } else {
+  }
+  else {
     this.submitButton.setAttribute('disabled', 'true');
   }
 };
@@ -241,8 +253,8 @@ FriendlyChat.prototype.toggleButton = function() {
 FriendlyChat.prototype.checkSetup = function() {
   if (!window.firebase || !(firebase.app instanceof Function) || !firebase.app().options) {
     window.alert('You have not configured and imported the Firebase SDK. ' +
-        'Make sure you go through the codelab setup instructions and make ' +
-        'sure you are running the codelab using `firebase serve`');
+      'Make sure you go through the codelab setup instructions and make ' +
+      'sure you are running the codelab using `firebase serve`');
   }
 };
 
